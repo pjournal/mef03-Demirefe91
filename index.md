@@ -1,5 +1,5 @@
 ### First Assignment
-- [RMarkdown Homework](https://pjournal.github.io/mef03-Demirefe91/RmarkdownHomework.html)
+- [RMarkdown Homework](RmarkdownHomework.html)
 
 ### Second Assignment
-- [BKM Homework - Rvest](https://pjournal.github.io/mef03-Demirefe91/bkmHomework.html)
+- [BKM Homework - Rvest](bkmHomework.html)
