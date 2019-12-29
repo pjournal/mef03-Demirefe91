@@ -1,0 +1,83 @@
+<style>
+pre {
+  overflow-x: auto;
+}
+pre code {
+  word-wrap: normal;
+  white-space: pre;
+}
+</style>
+
+# Second Assignment - BKM Homework With Rvest
+BKM's Sector Improvement Report include transaction counts and transaction volumes of Credit Cards/Banking Cards in different sector groups. We will analyse the data from 2019-January to 2019 July
+## Recommended Libraries
+```{r, warning=FALSE, message=FALSE}
+library(rvest)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(tidyverse)
+options(width = 999)
+```
+
+## Data Access
+
+```{r, warning=FALSE}
+for (i in 1:6){
+target_url = paste("https://bkm.com.tr/secilen-aya-ait-sektorel-gelisim/?filter_year=2019&filter_month=",
+                   i,sep='',collapse = NULL)
+content = read_html(target_url)
+table = bind_rows
+bkm_df = content %>%
+      html_nodes("table") %>%.[(4)] %>% 
+      html_table(page, fill = TRUE,header = FALSE) %>% 
+      as.data.frame() %>%
+      slice(3:max(nrow(.) - 1))
+bkm_df = bkm_df %>%mutate_if(is.numeric,funs(ifelse(is.na(.),0,.))) %>%  mutate(month=i)
+bkm_df_total = rbind(bkm_df)
+}
+```
+
+```{r}
+colnames(bkm_df_total) <- c('Category','CC_Transaction_Count','Debit_Transaction_Count','CC_Transaction_Amount'
+                            ,'Debit_Transaction_Amount', 'Month')
+
+## Cleaning the data format
+bkm_df_total$CC_Transaction_Count <- as.numeric(str_replace_all(bkm_df_total$CC_Transaction_Count, pattern=fixed("."), ""))
+bkm_df_total$Debit_Transaction_Count <- as.numeric(str_replace_all(bkm_df_total$Debit_Transaction_Count, pattern=fixed("."), ""))
+bkm_df_total$CC_Transaction_Amount <- str_replace_all(bkm_df_total$CC_Transaction_Amount, pattern=fixed("."), "")
+bkm_df_total$Debit_Transaction_Amount <- str_replace_all(bkm_df_total$Debit_Transaction_Amount, pattern=fixed("."), "")
+
+bkm_df_total$CC_Transaction_Amount <- as.numeric(str_replace_all(bkm_df_total$CC_Transaction_Amount, pattern=fixed(","), "."))
+bkm_df_total$Debit_Transaction_Amount <- as.numeric(str_replace_all(bkm_df_total$Debit_Transaction_Amount, pattern=fixed(","), "."))
+
+## Let's see our data
+kable(head(bkm_df_total), format="html", align = ("crrrrr"))
+```
+
+## Analysis
+
+### 1. Unit Transaction Amount of Categories
+```{r}
+## replication
+unit_transactions <- bkm_df_total
+## unit transaction amounts of cc and debit seperately
+unit_transactions <- unit_transactions %>% mutate(unit_credit_amount = 1000000 * CC_Transaction_Amount / CC_Transaction_Count, unit_debit_amount = 1000000* Debit_Transaction_Amount / Debit_Transaction_Count)
+## unit transaction percentages
+unit_transactions <- unit_transactions %>% transmute(Category, Month, cc_percentage = 100 * unit_credit_amount / sum(unit_credit_amount), debit_percentage = 100 * unit_debit_amount / sum(unit_debit_amount))
+## group by category to sum up all month data
+unit_transactions <- unit_transactions %>% group_by(Category) %>% mutate(debit_percentage = sum(debit_percentage), cc_percentage = sum(cc_percentage))
+ggplot(unit_transactions, aes(x=reorder(Category,cc_percentage+debit_percentage), y=cc_percentage+debit_percentage)) + geom_bar(aes(fill = cc_percentage+debit_percentage), stat = "identity",position ="stack") + coord_flip() + geom_point() + labs(x="Category",y="Unit Transaction Percentage ",title="Unit Transaction Percentage of Categories ",fill="Percentage")
+
+```
+
+### 2. Top 5 Categories of Transaction Counts
+
+```{r}
+## replication
+top_5 <- bkm_df_total 
+top_5 <- top_5 %>% group_by(Category) %>% mutate(all_transactions = sum(CC_Transaction_Count) + sum(Debit_Transaction_Count)) %>% arrange(desc(all_transactions))
+top_5 <- top_5[1:5,]
+ggplot(top_5, aes(x="", y=all_transactions/1000000, fill=Category)) + geom_bar(stat="identity", width=1) + coord_polar("y", start=0) +  labs(x = NULL, y = NULL, fill = NULL, title = "Transaction Count Chart of Top 5 Categories")
+```
+

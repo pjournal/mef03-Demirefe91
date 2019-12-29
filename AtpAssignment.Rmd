@@ -1,0 +1,65 @@
+---
+title: "Atp Assignment"
+author: "Efe Demir"
+output:
+  html_document:
+    code_folding: hide
+    highlight: zenburn
+---
+
+<style>
+pre {
+  overflow-x: auto;
+}
+pre code {
+  word-wrap: normal;
+  white-space: pre;
+}
+</style>  
+
+```{r, message=FALSE}
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+```
+
+# 1. Data Import
+
+```{r}
+url<-url("https://github.com/pjournal/mef03-demirefe91/blob/master/atp_tennis_data_2017.RData?raw=TRUE")
+atp_data<-load(url)
+glimpse(atp_data)
+```
+
+## 1.2. Flag Code Rankings
+
+```{r}
+singles_winners<-left_join(tourney_df,player_df,by=c("singles_winner_player_id"="player_id"))
+champ_flags_df<-singles_winners%>%select(singles_winner_player_id,flag_code)%>%count(flag_code,sort=T)
+champ_flags_df
+```
+## 1.3. Rank countries which did not get any singles championships by the games won when they win the match
+
+```{r}
+nonchamp_players<- player_df %>%select(player_id, flag_code) %>%anti_join(., champ_flags_df,by="flag_code")
+nonchamp_players %>% left_join(.,score_df, by= c("player_id"="winner_player_id")) %>%group_by(flag_code) %>%summarise(total_won= sum(winner_games_won, na.rm=TRUE)) %>%arrange(desc(total_won))
+```
+
+## 1.3. Hand Details of Champions
+
+```{r}
+prize_money <- inner_join(tourney_df, player_df, by=c("singles_winner_player_id" = "player_id")) %>% 
+  count(handedness, backhand) %>% arrange(desc(n))
+prize_money
+```
+
+## 1.4. Total Match Counts And Average Match Durations of Tournaments
+
+```{r}
+stats_df <- stats_df %>% mutate(num_tourney_id=as.numeric(tourney_id))
+tournaments <- inner_join(tourney_df, stats_df, by=c("tourney_id" ="num_tourney_id")) %>%
+  group_by(tourney_name) %>% summarise(total_duration = sum(match_duration)) %>% arrange(desc(total_duration))
+tournaments
+```
+
+

@@ -1,0 +1,47 @@
+# First Assignment : RMarkdown Homework
+## Introduction
+**Hello!** My name is Efe. I am a software engineer in Yapi ve Kredi Bankası A.Ş. Ever since I was young, I have been curious about data and statistics. There must have been an explanation of all achievements and events. Thus, I have begun to investigate the links between the results and the inputs. This perspective has led me to study positive science and focus on logical reasoning. And upon recent years the exponential enchancement in the data size and analytical methods, my enthusiasm to obtain a master's degree in Data Analytics has been growing steadily. After completing my master's education, I would like to establish a career development which I can use my Data Analytics knowledge and skills.
+
+## useR! 2019 Toulouse - Talk Data Handling - Zhuo Jia Dai
+The speaker indicates that the size of a data defines its analysis tool/language. When you can use Excel for atrivial data, you should use Hadoop/Spark tools.  
+  
+There are key ideas to handle big data:
+
+* Split large file into many chunks
+* Multicore CPUs to operate simultaneiously on chunks
+* Disk compression
+* Online algorithms or big data algorithms that operate on one chunk at a time
+
+And also key operations:  
+
+* Group by
+* Merging
+* Sorting
+
+And also speaker recommends future&future apply packages for paralleizing tasks, fst(Fast Random Access File) format for data storage and tidyverse package for data operations.
+
+```{r echo=FALSE}
+library("htmltools")
+library("vembedr")
+```
+
+```{r echo=FALSE}
+embed_url("https://www.youtube.com/watch?v=3XMTyi_H4q4")
+```
+
+## R for Data Science - Import, Tidy, Transform, Visualize and Model Data
+
+I found an e-book which has written by Hadley Wickham and Garrett Grolemund. It is starting from the very begining of data science up to detailed visualization methods in R  
+
+İt has very detailed and rich content. [Click for the content](https://www.bioinform.io/site/wp-content/uploads/2018/09/RDataScience.pdf)
+
+## 10 of the coolest cloud programming languages
+If you want to pick a portfolio of computer languages to master, look at these 10 great options that are used across the cloud computing world.
+When people think of choosing a computer language, they probably pick one of the well-known, general-purpose procedural languages taught in schools, such as C, Java, or Python. But these regular suspects are just the tips of the computer language iceberg -- if it uses keywords and a structure to communicate information, it's a language. [Click for the article](https://www.techrepublic.com/article/10-of-the-coolest-cloud-programming-languages/)
+
+
+## Three Strategies for Working with Big Data in R
+For many R users, it’s obvious why you’d want to use R with big data, but not so obvious how. In fact, many people (wrongly) believe that R just doesn’t work very well for big data.
+
+In this article, they’ll share three strategies for thinking about how to use big data in R, as well as some examples of how to execute each of them.
+[Click for the article](https://rviews.rstudio.com/2019/07/17/3-big-data-strategies-for-r/)
