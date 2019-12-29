@@ -1,0 +1,222 @@
+---
+title: "Final Work"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+    highlight: zenburn
+    fig_height: 4
+    fig_width: 6
+  html_document:
+    code_folding: hide
+    highlight: zenburn
+    toc: yes
+    toc_depth: 3
+---
+
+```{r, include=FALSE}
+library(plyr)
+library(dplyr)
+library(knitr)
+library(ggplot2)
+library(plotly)
+library(readxl)
+library(stringr)
+library(zoo)
+library(tidyverse)
+```
+# 1. Part I : Short and Simple
+## 1.1. AI Hype
+
+* AI Hype comes with many advantages. In several years AI will dominate human life by forecasting best economic actions, 
+proposing next best-action (in almost every life-action), early-diagnosing many ilnesses and optimizing production chains.
+In my opinion the most and the best outcome of AI is minimizing the human error. Especially in health sector automated and
+intelligent robots may practise surgeries that is currently imposible. This can really extend human-life. But there is a huge
+risk about massive unemployment.
+
+* The human source is the key to develop AI. Well-educated engineers with high mental-capacity are required. In turkey however
+there is really huge capacity, current education system can not enchance the students with brand-new technologies. As a person that
+his brother working in America for 15 years, our country does not offer good opportunities. If we consider a sufficient level 100,
+turkey's level can only be 20. According to WIPO's official figure, AI patenting numbers there is no Turkish Company or Turkish University
+in the list. This is a huge and frustrating evidence.
+
+## 1.2. Exploratory Data Analysis Workflow
+
+* My very first step to EDA is analyzing statistics of data (like mean, median, std) and detect outliers. By these statistics we can find
+data anomalies to fix. To detect ourliers box plotting is a very good tool. Then we can analyze variables. Categoric (ordinal/nominal) 
+variables' frequencies and distribution, numerical (discrete/continous) variables' tendency may give an idea. Histograms and boxplotting 
+is very common to analyze distributions. ggplot and plotly libraries area my favorites. 
+* In donations sample I assume that we have current category (like education level) levels and people distribution according to levels. 
+Maximum number of human access could be my main goal. I think donations should be distributed based on this. Also lowest levelled categories
+can be prioritiezed.
+* If I was more inclined for a policy, I would try to use data to support my thesis. I think we could find some guiding data for this perspective.
+Honesty would not be my priority. But if there is evidence that refuses my thesis, I am going to change it honestly(!) 
+
+## 1.3. Diamonds Analysis
+
+* We see that cut property is very important for carat price. 
+
+```{r}
+my_diamond <- diamonds %>% mutate(carat_price=price/carat) %>% group_by(color, cut) %>% 
+  summarise(mean_carat_price =mean(carat_price)) %>% arrange(desc(mean_carat_price))
+ggplot(my_diamond, aes(x=cut, y=mean_carat_price, fill=cut)) + geom_boxplot() + 
+  labs(x="Diamond Cut", y="Carat Price",title="Diamond Cut vs Carat Price", fill = "Cut")
+```
+
+# 2. Part II: Extending Our Group Project
+
+```{r, echo=FALSE}
+get_data_url <- function(start_year) {
+  data_url <- paste("https://github.com/pjournal/mef03g-mujde-r/blob/master/Group%20Project/Raw%20Data/", start_year, "-",
+                    start_year + 1, ".csv?raw=true", sep='')
+  return (data_url)
+}
+
+get_data_between_years <- function (start_year, end_year){
+all_raw_data <- data.frame()
+  for (year in seq(start_year, end_year)) {
+    data_url <- get_data_url(year)
+    raw_data <- read.csv(data_url,skip=1,sep=',',header=F)
+    raw_data <- raw_data %>% mutate(V1 = year)
+    if(year < 1999){
+      all_raw_data <- rbind.fill(all_raw_data, raw_data)
+    } else if(year < 2017){
+      ## First 10 variables
+      all_raw_data <- rbind.fill(all_raw_data, raw_data[c(1:10)])
+    } else{
+      ## First 22 variables
+      all_raw_data <- rbind.fill(all_raw_data, raw_data[c(1:22)])
+    }
+  }
+  return (all_raw_data)
+}
+raw_data <- get_data_between_years(1994, 2018)
+colnames(raw_data)<-c("season","date","HomeTeam","AwayTeam","FTHG","FTAG","FTR","HTHG","HTAG","HTR","HS","AS","HST","AST","HF","AF","HC","AC","HY","AY","HR","AR")
+```
+```{r}
+most_common_match_results <- raw_data %>% unite(match_score,c(FTHG, FTAG), sep="-") %>% select(season, match_result = FTR, match_score) 
+most_common_match_results <- most_common_match_results %>% group_by(match_result, match_score) %>% 
+  summarise(count=n()) %>% top_n(5, wt=count)
+
+common_home_win <-most_common_match_results %>% filter(match_result == "H")
+common_away_win <-most_common_match_results %>% filter(match_result == "A")
+common_draw <- most_common_match_results %>% filter(match_result == "D")
+```
+
+## 2.1. Home Win Most Common Match Scores
+
+```{r}
+ggplot(common_home_win, aes(reorder(match_score, count), count, fill=match_score)) +geom_bar(stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + coord_polar() +
+  labs(x="Score", y="Count", title="Most common Match Scores of Home Win", fill="Score")
+```
+
+## 2.2. Away Win Most Common Match Scores
+
+```{r}
+ggplot(common_away_win, aes(reorder(match_score, count), count, fill=match_score)) +geom_bar(stat="identity")+
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + coord_polar() +
+    labs(x="Score", y="Count", title="Most common Match Scores of Away Win", fill="Score")
+```
+
+## 2.3. Draw Most Common Match Scores
+
+```{r}
+ggplot(common_draw, aes(reorder(match_score, count), count, fill=match_score)) +geom_bar(stat="identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + coord_polar() +
+    labs(x="Score", y="Count", title="Most common Match Scores of Draw", fill="Score")
+```
+
+# 3. Welcome to Real Life
+## 3.1. Data Preparation
+```{r, echo=TRUE, message=FALSE, include=FALSE}
+all_data <- data.frame()
+for (start_year in seq(2014,2018)){
+ data_url <- paste("https://github.com/pjournal/mef03-Demirefe91/blob/master/",start_year,"_Organik_Tarimsal_Uretim_Verileri.xlsx?raw=true",sep="")
+  tmp<-tempfile(fileext=".xlsx")
+  download.file(data_url,destfile=tmp, mode='wb')
+  raw_data<-readxl::read_excel(tmp,col_names = FALSE, skip=4)
+  ## year added
+  raw_data <-  raw_data %>% mutate(V9 = start_year)
+  all_data <- rbind.fill(all_data, raw_data)
+}
+colnames(all_data) <- c("sehir", "urun", "sayı", "uretim", "toplama", "nadas", "toplam", "miktar", "yil")
+## special characters encoding
+all_data$sehir <- iconv(all_data$sehir, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+## convert sehir information to same format
+all_data$sehir <- tolower(all_data$sehir)
+## fill N/A sehir values from previous value
+all_data$sehir <- na.locf(all_data$sehir)
+## convert tons into kilograms
+all_data <- all_data %>% mutate(miktar=as.integer(miktar*1000))
+## special characters encoding
+all_data$urun <- iconv(all_data$urun, from = 'UTF-8', to = 'ASCII//TRANSLIT')
+## convert urun information to same format
+all_data$urun <- tolower(all_data$urun)
+```
+
+```{r}
+## total city values extracted into total_data
+total_data <- all_data %>% filter(str_detect(sehir,"toplam") & !str_detect(sehir,"genel") & !str_detect(sehir,"not"))
+total_data$sehir <- gsub('toplam ', '', total_data$sehir)
+total_data <- total_data %>% select(sehir, yil, sayi, uretim, toplama, nadas, toplam, miktar)
+
+## city detail values extracted into all_data
+all_data <- all_data %>% filter(!str_detect(sehir,"toplam")) %>% select(sehir, urun, miktar, yil)
+glimpse(all_data)
+glimpse(total_data)
+```
+
+## 3.2. Analyses
+### 3.2.1 Gross Production of 10 Top Cities
+
+```{r}
+gross_production <- all_data %>% filter(!is.na(miktar)) %>% group_by(sehir) %>% 
+  summarise(total_production = sum(miktar / 1000000)) %>%
+  arrange(desc(total_production)) %>% head(10)
+
+ggplot(gross_production, aes(reorder(sehir,total_production), total_production, fill=sehir))+
+  geom_bar(stat='identity') + coord_flip() + labs(x="City", y="Total Production Gross Ton", fill="City",
+        title="Top 10 Productive Cities")
+```
+
+* Let's store these cities
+
+```{r}
+top_cities <- as.vector(gross_production$sehir)
+```
+
+### 3.2.2. Distribution of Real Production / Gathering Area of 10 Top Cities
+
+```{r}
+proportion_uretim <- total_data %>% filter(sehir %in% top_cities) %>% group_by(sehir) %>% 
+  summarise(total = (sum(uretim)) * 100,  type="production area")
+proportion_toplama <- total_data %>% filter(sehir %in% top_cities) %>% group_by(sehir) %>% 
+  summarise(total = (sum(toplama)) * 100,  type="gathering area")
+proportion_all = bind_rows(proportion_uretim, proportion_toplama)
+ggplot(proportion_all, aes(sehir, total, fill=type)) + geom_bar(stat="identity", position="stack") + coord_flip() +
+  labs(x="City", y="Total Area (HA)", fill="Area Type", title="Production Area Distribution of 10 Top Cities")
+```
+
+### 3.2.3 Poduction Variety of Top 5 Cities By Years
+
+```{r}
+variety <- all_data %>% filter(miktar > 0) %>% group_by(yil, sehir) %>% summarise(count=n()) %>% top_n(5, wt=count)
+variety_cities <- as.vector(variety$sehir)
+top_variety <- all_data %>% filter(sehir %in% variety_cities)
+
+ggplot(top_variety, aes(sehir, fill=sehir)) + geom_density() + facet_wrap(~yil) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + labs(x="City", fill="City", title="Production Variety of Cities")
+```
+
+### 3.2.4 Most Nonfertile City Records
+
+```{r}
+fertility <- total_data %>% filter(!is.na(nadas) & nadas > 0 & !is.na(toplam) & toplam > 0 ) %>%
+  transmute(city = sehir,  percentage= (nadas/toplam) * 100, non_fertile_area=nadas, total_area=toplam, year=yil) %>%
+  arrange(desc(non_fertile_area)) %>% head(10)
+fertility
+```
+
+
+
